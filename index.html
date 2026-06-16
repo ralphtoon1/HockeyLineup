@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pitch Lineup — Field Hockey Formations</title>
+<style>
+  :root{
+    --turf:#0b6b4f;
+    --turf-dark:#085740;
+    --turf-line:rgba(255,255,255,0.55);
+    --chalk:#f4f6f3;
+    --ink:#0d1b16;
+    --amber:#f2a900;
+    --amber-deep:#c9821e;
+    --slate:#16271f;
+    --panel:#11231b;
+    --panel-edge:rgba(255,255,255,0.08);
+    --jersey:#fbfdfb;
+    --jersey-edge:#0b6b4f;
+    --gk:#f2a900;
+    --sub:#cfd8d2;
+    --shadow:0 8px 30px rgba(0,0,0,0.35);
+    --r:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(120% 120% at 50% -10%, #18382b 0%, #0c1c15 55%, #081310 100%);
+    color:var(--chalk);
+    font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  header.app{
+    text-align:center;
+    padding:34px 20px 10px;
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:0.42em;
+    text-transform:uppercase;
+    color:var(--amber);
+    font-weight:700;
+    margin:0 0 8px;
+  }
+  h1{
+    font-family:"Bebas Neue","Arial Narrow",sans-serif;
+    font-weight:400;
+    font-size:clamp(38px,7vw,68px);
+    letter-spacing:0.04em;
+    margin:0;
+    line-height:0.92;
+    text-transform:uppercase;
+  }
+  h1 .stroke{
+    color:transparent;
+    -webkit-text-stroke:1.4px var(--chalk);
+    text-stroke:1.4px var(--chalk);
+  }
+  .tagline{
+    margin:10px auto 0;
+    max-width:520px;
+    font-size:14px;
+    color:rgba(244,246,243,0.7);
+    line-height:1.5;
+  }
+
+  .layout{
+    max-width:1180px;
+    margin:0 auto;
+    padding:18px 20px 60px;
+    display:grid;
+    grid-template-columns:minmax(320px,1fr) 360px;
+    gap:26px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  /* ---- Controls bar ---- */
+  .controls{
+    grid-column:1 / -1;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    align-items:flex-end;
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:var(--r);
+    padding:16px 18px;
+    box-shadow:var(--shadow);
+  }
+  .field-label{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    font-size:11px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:rgba(244,246,243,0.6);
+    font-weight:600;
+  }
+  select, .ctrl-btn{
+    font-family:inherit;
+    font-size:15px;
+    color:var(--chalk);
+    background:var(--slate);
+    border:1px solid var(--panel-edge);
+    border-radius:10px;
+    padding:11px 14px;
+    cursor:pointer;
+    transition:border-color .15s ease, transform .05s ease;
+  }
+  select{min-width:230px;appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--amber) 50%),linear-gradient(135deg,var(--amber) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+    background-size:5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+    padding-right:38px;
+  }
+  select:focus-visible, .ctrl-btn:focus-visible, input:focus-visible{
+    outline:2px solid var(--amber);
+    outline-offset:2px;
+  }
+  .ctrl-btn{font-weight:600;letter-spacing:0.02em;}
+  .ctrl-btn:hover{border-color:var(--amber);}
+  .ctrl-btn:active{transform:translateY(1px);}
+  .ctrl-btn.amber{background:var(--amber);color:#1a1205;border-color:var(--amber-deep);}
+  .ctrl-btn.amber:hover{filter:brightness(1.06);}
+  .spacer{flex:1 1 auto;}
+
+  /* ---- Pitch ---- */
+  .pitch-wrap{
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:var(--r);
+    padding:16px;
+    box-shadow:var(--shadow);
+  }
+  .pitch-title{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin:2px 4px 12px;
+  }
+  .pitch-title .name{
+    font-family:"Bebas Neue","Arial Narrow",sans-serif;
+    font-size:24px;letter-spacing:0.05em;
+  }
+  .pitch-title .shape{
+    font-size:12px;letter-spacing:0.2em;color:var(--amber);font-weight:700;text-transform:uppercase;
+  }
+  .pitch{
+    position:relative;
+    width:100%;
+    aspect-ratio:5 / 7;
+    background:
+      repeating-linear-gradient(0deg, var(--turf) 0 7.142%, var(--turf-dark) 7.142% 14.285%);
+    border-radius:8px;
+    overflow:hidden;
+    border:2px solid var(--turf-line);
+  }
+  .pitch svg.markings{
+    position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  }
+  .player{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    width:64px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    text-align:center;
+    cursor:grab;
+    touch-action:none;          /* let us handle touch drags without the page scrolling */
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .player:active{cursor:grabbing;}
+  .player.dragging{opacity:0.35;}
+  .player.drop-target .shirt{
+    box-shadow:0 0 0 4px var(--amber), 0 3px 8px rgba(0,0,0,0.4);
+    transform:scale(1.08);
+    transition:transform .08s ease;
+  }
+  .drag-clone{
+    cursor:grabbing;
+    filter:drop-shadow(0 8px 14px rgba(0,0,0,0.5));
+  }
+  .drag-clone .shirt{transform:scale(1.12);}
+  .drag-hint{
+    margin:12px 4px 0;
+    text-align:center;
+    font-size:12px;
+    color:rgba(244,246,243,0.5);
+    letter-spacing:0.02em;
+  }
+  .shirt{
+    width:42px;height:42px;border-radius:50%;
+    background:var(--jersey);
+    border:2.5px solid var(--jersey-edge);
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Bebas Neue","Arial Narrow",sans-serif;
+    font-size:15px;
+    letter-spacing:0.03em;
+    color:var(--ink);
+    box-shadow:0 3px 8px rgba(0,0,0,0.4);
+  }
+  .player.gk .shirt{background:var(--gk);border-color:var(--amber-deep);}
+  .pos-tag{
+    font-size:10px;font-weight:700;letter-spacing:0.08em;
+    color:#fff;background:rgba(8,20,15,0.78);
+    padding:1px 7px;border-radius:999px;
+  }
+  .pname{
+    font-size:11px;line-height:1.15;
+    color:#fff;
+    max-width:70px;
+    word-break:break-word;
+    text-shadow:0 1px 3px rgba(0,0,0,0.7);
+    min-height:13px;
+  }
+
+  /* ---- Subs bar inside the exportable pitch panel ---- */
+  .subs-bar{
+    margin-top:14px;
+    background:var(--slate);
+    border:1px solid var(--panel-edge);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .subs-bar .subs-head{
+    font-size:10px;letter-spacing:0.2em;text-transform:uppercase;
+    color:var(--amber);font-weight:700;margin-bottom:9px;
+  }
+  .subs-chips{
+    display:flex;flex-wrap:wrap;gap:8px;
+  }
+  .sub-chip{
+    display:flex;align-items:center;gap:7px;
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:999px;
+    padding:5px 12px 5px 6px;
+    font-size:13px;
+    color:var(--chalk);
+    cursor:grab;
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .sub-chip:active{cursor:grabbing;}
+  .sub-chip.dragging{opacity:0.35;}
+  .sub-chip.drop-target{
+    box-shadow:0 0 0 3px var(--amber);
+    border-color:var(--amber);
+  }
+  .sub-chip .num{
+    flex:0 0 auto;
+    width:20px;height:20px;border-radius:50%;
+    background:var(--sub);color:#13241c;
+    font-size:10px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .sub-chip.empty{opacity:0.45;}
+  .sub-chip .who{white-space:nowrap;}
+
+  /* ---- Roster panel ---- */
+  .roster{
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:var(--r);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .roster h2{
+    font-family:"Bebas Neue","Arial Narrow",sans-serif;
+    font-weight:400;font-size:22px;letter-spacing:0.05em;
+    margin:0;padding:16px 18px 12px;
+    border-bottom:1px solid var(--panel-edge);
+  }
+  .roster-section-label{
+    font-size:10px;letter-spacing:0.2em;text-transform:uppercase;
+    color:var(--amber);font-weight:700;
+    padding:14px 18px 6px;
+  }
+  .row{
+    display:flex;align-items:center;gap:10px;
+    padding:5px 18px;
+  }
+  .row .badge{
+    flex:0 0 46px;
+    font-size:11px;font-weight:700;letter-spacing:0.04em;
+    color:rgba(244,246,243,0.85);
+    background:var(--slate);
+    border:1px solid var(--panel-edge);
+    border-radius:7px;
+    padding:6px 0;text-align:center;
+  }
+  .row.gk .badge{background:rgba(242,169,0,0.16);border-color:rgba(242,169,0,0.4);color:var(--amber);}
+  .row input{
+    flex:1 1 auto;
+    font-family:inherit;font-size:14px;
+    color:var(--chalk);
+    background:var(--slate);
+    border:1px solid var(--panel-edge);
+    border-radius:8px;
+    padding:8px 11px;
+  }
+  .row input::placeholder{color:rgba(244,246,243,0.32);}
+  .subs-block{padding-bottom:16px;}
+  .footnote{
+    padding:0 18px 18px;
+    font-size:11px;color:rgba(244,246,243,0.4);line-height:1.5;
+  }
+
+  @media (max-width:480px){
+    .player{width:54px;}
+    .shirt{width:36px;height:36px;font-size:13px;}
+    .pname{font-size:10px;}
+  }
+</style>
+</head>
+<body>
+<header class="app">
+  <p class="eyebrow">Field Hockey · Match Day</p>
+  <h1>Pitch <span class="stroke">Lineup</span></h1>
+  <p class="tagline">Pick a shape, name your eleven, and see the team take the field. Add up to five on the bench.</p>
+</header>
+
+<div class="layout">
+  <div class="controls">
+    <label class="field-label">
+      Formation
+      <select id="formationSelect"></select>
+    </label>
+    <div class="spacer"></div>
+    <button class="ctrl-btn" id="clearBtn" type="button">Clear names</button>
+    <button class="ctrl-btn" id="exportBtn" type="button">Export pitch (PNG)</button>
+    <button class="ctrl-btn amber" id="printBtn" type="button">Print / Save PDF</button>
+  </div>
+
+  <section class="pitch-wrap" aria-label="Pitch view">
+    <div id="exportArea">
+    <div class="pitch-title">
+      <span class="name" id="pitchName">—</span>
+      <span class="shape" id="pitchShape"></span>
+    </div>
+    <div class="pitch" id="pitch">
+      <svg class="markings" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
+        <!-- halfway line -->
+        <line x1="0" y1="70" x2="100" y2="70" stroke="var(--turf-line)" stroke-width="0.5"/>
+        <!-- centre spot -->
+        <circle cx="50" cy="70" r="0.9" fill="var(--turf-line)"/>
+        <!-- top shooting circle (D) -->
+        <path d="M 25 0 A 25 25 0 0 0 75 0" fill="none" stroke="var(--turf-line)" stroke-width="0.5"/>
+        <line x1="0" y1="0" x2="100" y2="0" stroke="var(--turf-line)" stroke-width="1"/>
+        <!-- bottom shooting circle (D) -->
+        <path d="M 25 140 A 25 25 0 0 1 75 140" fill="none" stroke="var(--turf-line)" stroke-width="0.5"/>
+        <line x1="0" y1="140" x2="100" y2="140" stroke="var(--turf-line)" stroke-width="1"/>
+        <!-- top goal -->
+        <rect x="42" y="-1" width="16" height="2.4" fill="none" stroke="var(--turf-line)" stroke-width="0.7"/>
+        <!-- bottom goal -->
+        <rect x="42" y="138.6" width="16" height="2.4" fill="none" stroke="var(--turf-line)" stroke-width="0.7"/>
+        <!-- 23m lines -->
+        <line x1="0" y1="35" x2="100" y2="35" stroke="var(--turf-line)" stroke-width="0.3" stroke-dasharray="2 2"/>
+        <line x1="0" y1="105" x2="100" y2="105" stroke="var(--turf-line)" stroke-width="0.3" stroke-dasharray="2 2"/>
+      </svg>
+      <!-- player markers injected here -->
+    </div>
+    <div class="subs-bar">
+      <div class="subs-head">Substitutes</div>
+      <div class="subs-chips" id="subChips"></div>
+    </div>
+    </div>
+    <p class="drag-hint">Drag any player or substitute onto another to swap them.</p>
+  </section>
+
+  <aside class="roster">
+    <h2>Team Sheet</h2>
+    <div class="roster-section-label">Starting XI</div>
+    <div id="starterRows"></div>
+    <div class="roster-section-label">Substitutes</div>
+    <div class="subs-block" id="subRows"></div>
+    <p class="footnote">Nothing is saved — names clear when you close the tab. Use Print / Save PDF to keep a copy for the game.</p>
+  </aside>
+</div>
+
+<script>
+"use strict";
+
+// Each position: code (shown on pitch + roster), label (full name for the title attr),
+// and x/y as percentages of the pitch (x: 0 left → 100 right, y: 0 top goal → 100 our goal).
+// Goalkeeper sits low (near 100). All formations total 11 including GK.
+
+const FORMATIONS = {
+  "4-3-3": {
+    label: "4-3-3",
+    positions: [
+      { code:"GK",  label:"Goalkeeper",     x:50, y:93, gk:true },
+      { code:"LB",  label:"Left Back",      x:20, y:76 },
+      { code:"LCB", label:"Left Centre Back",  x:40, y:80 },
+      { code:"RCB", label:"Right Centre Back", x:60, y:80 },
+      { code:"RB",  label:"Right Back",     x:80, y:76 },
+      { code:"LM",  label:"Left Midfield",  x:25, y:53 },
+      { code:"CM",  label:"Centre Midfield", x:50, y:56 },
+      { code:"RM",  label:"Right Midfield", x:75, y:53 },
+      { code:"LW",  label:"Left Wing",      x:22, y:24 },
+      { code:"CF",  label:"Centre Forward", x:50, y:18 },
+      { code:"RW",  label:"Right Wing",     x:78, y:24 }
+    ]
+  },
+  "4-4-2": {
+    label: "4-4-2",
+    positions: [
+      { code:"GK",  label:"Goalkeeper",     x:50, y:93, gk:true },
+      { code:"LB",  label:"Left Back",      x:20, y:78 },
+      { code:"LCB", label:"Left Centre Back",  x:40, y:81 },
+      { code:"RCB", label:"Right Centre Back", x:60, y:81 },
+      { code:"RB",  label:"Right Back",     x:80, y:78 },
+      { code:"LM",  label:"Left Midfield",  x:18, y:52 },
+      { code:"LCM", label:"Left Centre Mid", x:40, y:55 },
+      { code:"RCM", label:"Right Centre Mid", x:60, y:55 },
+      { code:"RM",  label:"Right Midfield", x:82, y:52 },
+      { code:"LF",  label:"Left Forward",   x:38, y:22 },
+      { code:"RF",  label:"Right Forward",  x:62, y:22 }
+    ]
+  },
+  "3-4-3": {
+    label: "3-4-3",
+    positions: [
+      { code:"GK",  label:"Goalkeeper",       x:50, y:93, gk:true },
+      { code:"LCB", label:"Left Centre Back",  x:28, y:79 },
+      { code:"CB",  label:"Centre Back",       x:50, y:82 },
+      { code:"RCB", label:"Right Centre Back", x:72, y:79 },
+      { code:"LM",  label:"Left Midfield",     x:16, y:53 },
+      { code:"LCM", label:"Left Centre Mid",   x:40, y:56 },
+      { code:"RCM", label:"Right Centre Mid",  x:60, y:56 },
+      { code:"RM",  label:"Right Midfield",    x:84, y:53 },
+      { code:"LW",  label:"Left Wing",         x:22, y:23 },
+      { code:"CF",  label:"Centre Forward",    x:50, y:18 },
+      { code:"RW",  label:"Right Wing",        x:78, y:23 }
+    ]
+  },
+  "5-3-2": {
+    label: "5-3-2",
+    positions: [
+      { code:"GK",  label:"Goalkeeper",        x:50, y:94, gk:true },
+      { code:"LWB", label:"Left Wing Back",     x:13, y:72 },
+      { code:"LCB", label:"Left Centre Back",   x:32, y:81 },
+      { code:"CB",  label:"Centre Back",        x:50, y:84 },
+      { code:"RCB", label:"Right Centre Back",  x:68, y:81 },
+      { code:"RWB", label:"Right Wing Back",    x:87, y:72 },
+      { code:"LM",  label:"Left Midfield",      x:28, y:52 },
+      { code:"CM",  label:"Centre Midfield",    x:50, y:55 },
+      { code:"RM",  label:"Right Midfield",     x:72, y:52 },
+      { code:"LF",  label:"Left Forward",       x:38, y:22 },
+      { code:"RF",  label:"Right Forward",      x:62, y:22 }
+    ]
+  },
+  "4-2-3-1": {
+    label: "4-2-3-1",
+    positions: [
+      { code:"GK",  label:"Goalkeeper",         x:50, y:94, gk:true },
+      { code:"LB",  label:"Left Back",           x:20, y:78 },
+      { code:"LCB", label:"Left Centre Back",    x:40, y:81 },
+      { code:"RCB", label:"Right Centre Back",   x:60, y:81 },
+      { code:"RB",  label:"Right Back",          x:80, y:78 },
+      { code:"LDM", label:"Left Defensive Mid",  x:38, y:60 },
+      { code:"RDM", label:"Right Defensive Mid", x:62, y:60 },
+      { code:"LAM", label:"Left Attacking Mid",  x:22, y:38 },
+      { code:"CAM", label:"Centre Attacking Mid",x:50, y:40 },
+      { code:"RAM", label:"Right Attacking Mid", x:78, y:38 },
+      { code:"CF",  label:"Centre Forward",      x:50, y:17 }
+    ]
+  }
+};
+
+const SUB_COUNT = 5;
+
+const pitch          = document.getElementById("pitch");
+const formationSelect= document.getElementById("formationSelect");
+const starterRows    = document.getElementById("starterRows");
+const subRows        = document.getElementById("subRows");
+const subChips       = document.getElementById("subChips");
+const pitchName      = document.getElementById("pitchName");
+const pitchShape     = document.getElementById("pitchShape");
+const clearBtn       = document.getElementById("clearBtn");
+const exportBtn      = document.getElementById("exportBtn");
+const printBtn       = document.getElementById("printBtn");
+
+// In-memory state only. Keyed by position code for starters, by index for subs.
+let starterNames = {};
+const subNames   = new Array(SUB_COUNT).fill("");
+let currentKey   = "4-3-3";
+
+// Populate the formation dropdown.
+Object.keys(FORMATIONS).forEach(function (key) {
+  const opt = document.createElement("option");
+  opt.value = key;
+  opt.textContent = FORMATIONS[key].label;
+  formationSelect.appendChild(opt);
+});
+
+function renderPitch() {
+  const formation = FORMATIONS[currentKey];
+
+  // Remove existing player markers (keep the SVG markings).
+  Array.prototype.slice.call(pitch.querySelectorAll(".player")).forEach(function (el) {
+    el.remove();
+  });
+
+  pitchName.textContent = formation.label + " Setup";
+  pitchShape.textContent = formation.label;
+
+  formation.positions.forEach(function (pos) {
+    const marker = document.createElement("div");
+    marker.className = pos.gk ? "player gk" : "player";
+    marker.style.left = pos.x + "%";
+    marker.style.top  = pos.y + "%";
+    marker.title = pos.label;
+    marker.setAttribute("data-code", pos.code);
+
+    const shirt = document.createElement("div");
+    shirt.className = "shirt";
+    shirt.textContent = pos.code;
+
+    const name = document.createElement("div");
+    name.className = "pname";
+    name.textContent = starterNames[pos.code] || "";
+
+    marker.appendChild(shirt);
+    marker.appendChild(name);
+
+    marker.addEventListener("pointerdown", function (e) {
+      startDrag(e, marker, { kind: "starter", code: pos.code });
+    });
+
+    pitch.appendChild(marker);
+  });
+}
+
+// ---- Drag to swap players between positions ----
+// Uses pointer events so it works with mouse, touch, and pen alike.
+let dragState = null;
+
+// A "slot" is where a name lives: a starter position or a bench index.
+//   { kind: "starter", code: "LB" }   or   { kind: "sub", index: 2 }
+function getSlotName(slot) {
+  return (slot.kind === "starter")
+    ? (starterNames[slot.code] || "")
+    : (subNames[slot.index] || "");
+}
+function setSlotName(slot, value) {
+  if (slot.kind === "starter") { starterNames[slot.code] = value; }
+  else { subNames[slot.index] = value; }
+}
+function sameSlot(a, b) {
+  if (!a || !b || a.kind !== b.kind) { return false; }
+  return (a.kind === "starter") ? (a.code === b.code) : (a.index === b.index);
+}
+function slotFromEl(el) {
+  if (!el) { return null; }
+  if (el.classList.contains("player")) {
+    return { kind: "starter", code: el.getAttribute("data-code") };
+  }
+  if (el.classList.contains("sub-chip")) {
+    return { kind: "sub", index: parseInt(el.getAttribute("data-sub-index"), 10) };
+  }
+  return null;
+}
+
+// Re-render every view that shows a name, after a swap.
+function renderAll() {
+  renderStarterRows();
+  renderSubRows();
+  renderSubChips();
+  renderPitch();
+}
+
+function swapSlots(a, b) {
+  const tmp = getSlotName(a);
+  setSlotName(a, getSlotName(b));
+  setSlotName(b, tmp);
+  renderAll();
+}
+
+// All draggable/droppable elements: pitch players + bench chips.
+function draggableEls() {
+  const players = Array.prototype.slice.call(pitch.querySelectorAll(".player"));
+  const chips = Array.prototype.slice.call(subChips.querySelectorAll(".sub-chip"));
+  return players.concat(chips);
+}
+
+function slotElUnderPoint(x, y) {
+  // Primary: hit-test via the rendered stack (handles overlaps cleanly).
+  const el = document.elementFromPoint(x, y);
+  const hit = el ? el.closest(".player, .sub-chip") : null;
+  if (hit) { return hit; }
+
+  // Fallback: geometric test. elementFromPoint only sees inside the viewport,
+  // so this keeps drops working if part of the layout is scrolled off-screen.
+  let best = null;
+  let bestDist = Infinity;
+  draggableEls().forEach(function (m) {
+    const r = m.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const inside = (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+    const dist = Math.hypot(x - cx, y - cy);
+    if (inside && dist < bestDist) { best = m; bestDist = dist; }
+    else if (!best && dist < Math.max(r.width, r.height) * 0.9 && dist < bestDist) {
+      best = m; bestDist = dist;
+    }
+  });
+  return best;
+}
+
+function clearDropTargets() {
+  Array.prototype.slice.call(document.querySelectorAll(".drop-target"))
+    .forEach(function (el) { el.classList.remove("drop-target"); });
+}
+
+function startDrag(e, el, slot) {
+  // Only react to the primary (left / single-touch) pointer.
+  if (typeof e.button === "number" && e.button !== 0) { return; }
+  e.preventDefault();
+
+  const rect = el.getBoundingClientRect();
+  dragState = {
+    slot: slot,
+    sourceEl: el,
+    clone: null,
+    started: false,                 // becomes true once we move past the threshold
+    startX: e.clientX,
+    startY: e.clientY,
+    offsetX: e.clientX - rect.left,
+    offsetY: e.clientY - rect.top,
+    width: rect.width
+  };
+
+  window.addEventListener("pointermove", onDragMove);
+  window.addEventListener("pointerup", onDragEnd);
+  window.addEventListener("pointercancel", onDragEnd);
+}
+
+function beginVisualDrag() {
+  const ds = dragState;
+  const clone = ds.sourceEl.cloneNode(true);
+  clone.classList.add("drag-clone");
+  clone.classList.remove("dragging");
+  clone.style.position = "fixed";
+  clone.style.margin = "0";
+  clone.style.width = ds.width + "px";
+  clone.style.pointerEvents = "none";   // so elementFromPoint sees what's beneath
+  clone.style.zIndex = "2000";
+  clone.style.left = (ds.startX - ds.offsetX) + "px";
+  clone.style.top = (ds.startY - ds.offsetY) + "px";
+  clone.style.transform = "none";       // override any centering transform
+  document.body.appendChild(clone);
+  ds.clone = clone;
+  ds.sourceEl.classList.add("dragging");
+  ds.started = true;
+}
+
+function onDragMove(e) {
+  if (!dragState) { return; }
+  const ds = dragState;
+
+  // Start the visual drag only after a small movement, so a tap isn't a drag.
+  if (!ds.started) {
+    const moved = Math.abs(e.clientX - ds.startX) + Math.abs(e.clientY - ds.startY);
+    if (moved < 6) { return; }
+    beginVisualDrag();
+  }
+
+  e.preventDefault();
+  ds.clone.style.left = (e.clientX - ds.offsetX) + "px";
+  ds.clone.style.top = (e.clientY - ds.offsetY) + "px";
+
+  clearDropTargets();
+  const over = slotElUnderPoint(e.clientX, e.clientY);
+  if (over && over !== ds.sourceEl) {
+    over.classList.add("drop-target");
+  }
+}
+
+function onDragEnd(e) {
+  if (!dragState) { return; }
+  const ds = dragState;
+
+  window.removeEventListener("pointermove", onDragMove);
+  window.removeEventListener("pointerup", onDragEnd);
+  window.removeEventListener("pointercancel", onDragEnd);
+
+  // A drag that never passed the threshold is just a tap — do nothing.
+  if (!ds.started) { dragState = null; return; }
+
+  const over = slotElUnderPoint(e.clientX, e.clientY);
+  const targetSlot = slotFromEl(over);
+
+  if (ds.clone) { ds.clone.remove(); }
+  ds.sourceEl.classList.remove("dragging");
+  clearDropTargets();
+  dragState = null;
+
+  if (targetSlot && !sameSlot(targetSlot, ds.slot)) {
+    swapSlots(ds.slot, targetSlot);
+  }
+}
+
+function renderStarterRows() {
+  const formation = FORMATIONS[currentKey];
+  starterRows.innerHTML = "";
+
+  formation.positions.forEach(function (pos) {
+    const row = document.createElement("div");
+    row.className = pos.gk ? "row gk" : "row";
+
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.textContent = pos.code;
+    badge.title = pos.label;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = pos.label;
+    input.value = starterNames[pos.code] || "";
+    input.setAttribute("aria-label", pos.label + " name");
+    input.addEventListener("input", function () {
+      starterNames[pos.code] = input.value;
+      renderPitch();
+    });
+
+    row.appendChild(badge);
+    row.appendChild(input);
+    starterRows.appendChild(row);
+  });
+}
+
+function renderSubChips() {
+  subChips.innerHTML = "";
+  for (let i = 0; i < SUB_COUNT; i++) {
+    const name = (subNames[i] || "").trim();
+    const chip = document.createElement("div");
+    chip.className = name ? "sub-chip" : "sub-chip empty";
+    chip.setAttribute("data-sub-index", i);
+    chip.title = "Substitute " + (i + 1) + " — drag to swap";
+
+    const num = document.createElement("div");
+    num.className = "num";
+    num.textContent = "S" + (i + 1);
+
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = name || "—";
+
+    chip.appendChild(num);
+    chip.appendChild(who);
+
+    (function (index) {
+      chip.addEventListener("pointerdown", function (e) {
+        startDrag(e, chip, { kind: "sub", index: index });
+      });
+    })(i);
+
+    subChips.appendChild(chip);
+  }
+}
+
+function renderSubRows() {
+  subRows.innerHTML = "";
+  for (let i = 0; i < SUB_COUNT; i++) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.textContent = "S" + (i + 1);
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Substitute " + (i + 1);
+    input.value = subNames[i];
+    input.setAttribute("aria-label", "Substitute " + (i + 1) + " name");
+    input.addEventListener("input", function () {
+      subNames[i] = input.value;
+      renderSubChips();
+    });
+
+    row.appendChild(badge);
+    row.appendChild(input);
+    subRows.appendChild(row);
+  }
+}
+
+// ---- Carry player names across formation changes ----
+// Every formation has 11 positions, so names can always be mapped 1:1.
+// Strategy: keep a name in place when the new formation has the same position
+// code (e.g. RCB -> RCB); for positions that don't carry over, assign each
+// remaining player to the spatially closest free slot in the new shape.
+
+function posDistSq(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return (dx * dx) + (dy * dy);
+}
+
+// Call cb with every permutation of [0..n-1] (Heap's algorithm).
+function eachPermutation(n, cb) {
+  const a = [];
+  for (let i = 0; i < n; i++) { a.push(i); }
+  const c = new Array(n).fill(0);
+  cb(a);
+  let i = 0;
+  while (i < n) {
+    if (c[i] < i) {
+      const k = (i % 2 === 0) ? 0 : c[i];
+      const tmp = a[k]; a[k] = a[i]; a[i] = tmp;
+      cb(a);
+      c[i] += 1;
+      i = 0;
+    } else {
+      c[i] = 0;
+      i += 1;
+    }
+  }
+}
+
+// Returns a map of newCode -> oldCode for the leftover positions, chosen to
+// minimise total distance. Brute-forces the optimum for small counts (the
+// usual case), falling back to a greedy match if there are many leftovers.
+function matchRemaining(oldArr, newArr) {
+  const map = {};
+  const n = newArr.length;
+  if (n === 0) { return map; }
+
+  if (n <= 8) {
+    let bestPerm = null;
+    let bestCost = Infinity;
+    eachPermutation(n, function (perm) {
+      let cost = 0;
+      for (let i = 0; i < n; i++) {
+        cost += posDistSq(newArr[i], oldArr[perm[i]]);
+      }
+      if (cost < bestCost) { bestCost = cost; bestPerm = perm.slice(); }
+    });
+    for (let i = 0; i < n; i++) {
+      map[newArr[i].code] = oldArr[bestPerm[i]].code;
+    }
+  } else {
+    const usedO = {};
+    const usedN = {};
+    const pairs = [];
+    for (let i = 0; i < newArr.length; i++) {
+      for (let j = 0; j < oldArr.length; j++) {
+        pairs.push({ ni: i, oj: j, d: posDistSq(newArr[i], oldArr[j]) });
+      }
+    }
+    pairs.sort(function (p, q) { return p.d - q.d; });
+    pairs.forEach(function (pr) {
+      if (!usedN[pr.ni] && !usedO[pr.oj]) {
+        usedN[pr.ni] = true;
+        usedO[pr.oj] = true;
+        map[newArr[pr.ni].code] = oldArr[pr.oj].code;
+      }
+    });
+  }
+  return map;
+}
+
+function remapNames(oldKey, newKey, oldNames) {
+  const oldPos = FORMATIONS[oldKey].positions;
+  const newPos = FORMATIONS[newKey].positions;
+
+  const oldCodes = {};
+  oldPos.forEach(function (p) { oldCodes[p.code] = true; });
+
+  const usedOld = {};
+  const mapping = {};  // new code -> old code it inherits from
+
+  // Pass 1: exact position-code matches stay put.
+  newPos.forEach(function (np) {
+    if (oldCodes[np.code] && !usedOld[np.code]) {
+      mapping[np.code] = np.code;
+      usedOld[np.code] = true;
+    }
+  });
+
+  // Pass 2: assign the rest to the nearest available slot.
+  const remNew = newPos.filter(function (np) { return !mapping.hasOwnProperty(np.code); });
+  const remOld = oldPos.filter(function (op) { return !usedOld[op.code]; });
+  const rest = matchRemaining(remOld, remNew);
+  Object.keys(rest).forEach(function (nc) { mapping[nc] = rest[nc]; });
+
+  // Apply names through the mapping.
+  const result = {};
+  newPos.forEach(function (np) {
+    const from = mapping[np.code];
+    const nm = from ? (oldNames[from] || "") : "";
+    if (nm) { result[np.code] = nm; }
+  });
+  return result;
+}
+
+formationSelect.addEventListener("change", function () {
+  const oldKey = currentKey;
+  const newKey = formationSelect.value;
+  // Carry names over to the new shape instead of clearing them.
+  starterNames = remapNames(oldKey, newKey, starterNames);
+  currentKey = newKey;
+  renderStarterRows();
+  renderPitch();
+});
+
+clearBtn.addEventListener("click", function () {
+  starterNames = {};
+  for (let i = 0; i < SUB_COUNT; i++) { subNames[i] = ""; }
+  renderStarterRows();
+  renderSubRows();
+  renderSubChips();
+  renderPitch();
+});
+
+printBtn.addEventListener("click", function () {
+  window.print();
+});
+
+// Export just the pitch + subs as a PNG to share with players.
+// Builds a self-contained SVG (no external libraries), rasterises it via canvas.
+function buildExportSVG() {
+  const formation = FORMATIONS[currentKey];
+  const W = 500;            // pitch width
+  const PITCH_H = 700;      // pitch height (5:7 ratio)
+  const TITLE_H = 54;
+  const SUBS_H = 88;
+  const H = TITLE_H + PITCH_H + SUBS_H;
+
+  const esc = function (s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  };
+
+  // Map pitch-percentage coords to the 500x700 pitch box (offset by title height).
+  const px = function (xPct) { return (xPct / 100) * W; };
+  const py = function (yPct) { return TITLE_H + (yPct / 100) * PITCH_H; };
+
+  const parts = [];
+  parts.push('<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">');
+
+  // Panel background.
+  parts.push('<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#11231b"/>');
+
+  // Title.
+  parts.push('<text x="14" y="34" fill="#f4f6f3" font-family="Arial, sans-serif" font-size="24" font-weight="700">'
+    + esc(formation.label + " Setup") + '</text>');
+  parts.push('<text x="' + (W - 14) + '" y="32" fill="#f2a900" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2" text-anchor="end">'
+    + esc(formation.label.toUpperCase()) + '</text>');
+
+  // Pitch turf with horizontal stripes.
+  const STRIPES = 14;
+  for (let i = 0; i < STRIPES; i++) {
+    const y = TITLE_H + (PITCH_H / STRIPES) * i;
+    const fill = (i % 2 === 0) ? "#0b6b4f" : "#085740";
+    parts.push('<rect x="0" y="' + y + '" width="' + W + '" height="' + (PITCH_H / STRIPES) + '" fill="' + fill + '"/>');
+  }
+
+  // Markings (scaled from the 100x140 reference used on screen).
+  const sx = W / 100;
+  const sy = PITCH_H / 140;
+  const mx = function (x) { return x * sx; };
+  const my = function (y) { return TITLE_H + y * sy; };
+  const line = "rgba(255,255,255,0.55)";
+  // halfway
+  parts.push('<line x1="0" y1="' + my(70) + '" x2="' + W + '" y2="' + my(70) + '" stroke="' + line + '" stroke-width="1.8"/>');
+  parts.push('<circle cx="' + mx(50) + '" cy="' + my(70) + '" r="3" fill="' + line + '"/>');
+  // shooting circles
+  parts.push('<path d="M ' + mx(25) + ' ' + my(0) + ' A ' + (25 * sx) + ' ' + (25 * sy) + ' 0 0 0 ' + mx(75) + ' ' + my(0) + '" fill="none" stroke="' + line + '" stroke-width="1.8"/>');
+  parts.push('<path d="M ' + mx(25) + ' ' + my(140) + ' A ' + (25 * sx) + ' ' + (25 * sy) + ' 0 0 1 ' + mx(75) + ' ' + my(140) + '" fill="none" stroke="' + line + '" stroke-width="1.8"/>');
+  // 23m dashed lines
+  parts.push('<line x1="0" y1="' + my(35) + '" x2="' + W + '" y2="' + my(35) + '" stroke="' + line + '" stroke-width="1" stroke-dasharray="7 7"/>');
+  parts.push('<line x1="0" y1="' + my(105) + '" x2="' + W + '" y2="' + my(105) + '" stroke="' + line + '" stroke-width="1" stroke-dasharray="7 7"/>');
+  // goals
+  parts.push('<rect x="' + mx(42) + '" y="' + (my(0)) + '" width="' + (16 * sx) + '" height="6" fill="none" stroke="' + line + '" stroke-width="1.4"/>');
+  parts.push('<rect x="' + mx(42) + '" y="' + (my(140) - 6) + '" width="' + (16 * sx) + '" height="6" fill="none" stroke="' + line + '" stroke-width="1.4"/>');
+
+  // Players.
+  formation.positions.forEach(function (pos) {
+    const cx = px(pos.x);
+    const cy = py(pos.y);
+    const shirtFill = pos.gk ? "#f2a900" : "#fbfdfb";
+    const shirtEdge = pos.gk ? "#c9821e" : "#0b6b4f";
+    parts.push('<circle cx="' + cx + '" cy="' + cy + '" r="21" fill="' + shirtFill + '" stroke="' + shirtEdge + '" stroke-width="2.5"/>');
+    parts.push('<text x="' + cx + '" y="' + (cy + 5) + '" fill="#0d1b16" font-family="Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle">'
+      + esc(pos.code) + '</text>');
+    const nm = (starterNames[pos.code] || "").trim();
+    if (nm) {
+      let shownName = nm;
+      if (shownName.length > 16) { shownName = shownName.slice(0, 15) + "…"; }
+      parts.push('<text x="' + cx + '" y="' + (cy + 38) + '" fill="#ffffff" font-family="Arial, sans-serif" font-size="12" font-weight="600" text-anchor="middle">'
+        + esc(shownName) + '</text>');
+    }
+  });
+
+  // Subs strip — five chips sized to fit one row across the width.
+  const stripY = TITLE_H + PITCH_H;
+  parts.push('<rect x="0" y="' + stripY + '" width="' + W + '" height="' + SUBS_H + '" fill="#16271f"/>');
+  parts.push('<text x="14" y="' + (stripY + 22) + '" fill="#f2a900" font-family="Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="2">SUBSTITUTES</text>');
+  const gap = 8;
+  const sideMargin = 14;
+  const chipW = (W - (sideMargin * 2) - (gap * (SUB_COUNT - 1))) / SUB_COUNT;
+  const chipY = stripY + 38;
+  for (let i = 0; i < SUB_COUNT; i++) {
+    const nm = (subNames[i] || "").trim();
+    const chipX = sideMargin + i * (chipW + gap);
+    const op = nm ? "1" : "0.45";
+    // Truncate long names so they stay inside the chip.
+    let shown = nm || "—";
+    const maxChars = Math.floor((chipW - 30) / 6.2);
+    if (shown.length > maxChars) { shown = shown.slice(0, Math.max(1, maxChars - 1)) + "…"; }
+    parts.push('<g opacity="' + op + '">');
+    parts.push('<rect x="' + chipX + '" y="' + chipY + '" width="' + chipW + '" height="30" rx="15" fill="#11231b" stroke="rgba(255,255,255,0.08)"/>');
+    parts.push('<circle cx="' + (chipX + 16) + '" cy="' + (chipY + 15) + '" r="9" fill="#cfd8d2"/>');
+    parts.push('<text x="' + (chipX + 16) + '" y="' + (chipY + 19) + '" fill="#13241c" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" text-anchor="middle">S' + (i + 1) + '</text>');
+    parts.push('<text x="' + (chipX + 30) + '" y="' + (chipY + 19) + '" fill="#f4f6f3" font-family="Arial, sans-serif" font-size="12">' + esc(shown) + '</text>');
+    parts.push('</g>');
+  }
+
+  parts.push('</svg>');
+  return { svg: parts.join(""), w: W, h: H };
+}
+
+exportBtn.addEventListener("click", function () {
+  const label = exportBtn.textContent;
+  exportBtn.textContent = "Rendering…";
+  exportBtn.disabled = true;
+
+  const restore = function () {
+    exportBtn.textContent = label;
+    exportBtn.disabled = false;
+  };
+
+  try {
+    const built = buildExportSVG();
+    const blob = new Blob([built.svg], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+
+    img.onload = function () {
+      const scale = 2;  // crisp on retina / when enlarged
+      const canvas = document.createElement("canvas");
+      canvas.width = built.w * scale;
+      canvas.height = built.h * scale;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+
+      const link = document.createElement("a");
+      link.download = "lineup-" + FORMATIONS[currentKey].label + ".png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      restore();
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      alert("Sorry — the image couldn't be generated. Try the Print / Save PDF option instead.");
+      restore();
+    };
+    img.src = url;
+  } catch (err) {
+    alert("Sorry — the image couldn't be generated. Try the Print / Save PDF option instead.");
+    restore();
+  }
+});
+
+// Initial render.
+renderStarterRows();
+renderSubRows();
+renderSubChips();
+renderPitch();
+</script>
+</body>
+</html>
